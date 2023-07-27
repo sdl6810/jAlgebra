@@ -20,5 +20,4 @@ The polynomial class, once finished, will be able to do the following as well:
 > sort the terms into descending order as expected,
 > identify if the expression **actually is a polynomial**.  This means no fractional exponents of any kind.
 
-Please review the following documentation below for each of the given methods developed to ensure the Polynomial class's functionality.
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+**The complex number** class is especially important because a quadratic or cubic polynomia's roots may or may not be real.  So this will esecpailly play a role in determining what the function's-in-question roots are.
