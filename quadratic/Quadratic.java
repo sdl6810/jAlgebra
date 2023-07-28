@@ -7,9 +7,9 @@ public class Quadratic extends Polynomial
 	private ArrayList<Double> realRoots = new ArrayList<Double>();
 	private double discriminant = 0.0;
 
-	public void determinant(doube a, double b, double c)
+	public void findDescriminant(double a, double b, double c)
 	{
-		this.determinant = b*b - 4*a*c;
+		this.discriminant = b*b - 4*a*c;
 	}
 
 	public void solve(double a, double b, double c)
@@ -22,21 +22,26 @@ public class Quadratic extends Polynomial
 		The whole solution will become a complex number, with -b/2a being the real component, and
 		the result of sqrt(b^2-4ac)/2a becomes the imaginary component
 		*/
-		if this.determinant < 0
+		if (this.discriminant < 0)
 		{
 			ComplexNumber complexRoot = new ComplexNumber((b*b)/2*a,(-1)*Math.abs((b*b)-4*a*c));
-			ComplexNumber complexConjugate = new ComplexRoot((b*b)/2*a,Math.abs((b*b)-4*a*c));
+			ComplexNumber complexConjugate = new ComplexNumber((b*b)/2*a,Math.abs((b*b)-4*a*c));
 			this.imaginaryRoots.add(complexRoot);
-			this.imagrinarRoots.add(complexConjugate);
+			this.imaginaryRoots.add(complexConjugate);
 		}
-		else if this.discriminant > 0
+		else if (this.discriminant > 0)
 		{	
-			this.roots.add(((-1)*b + Math.sqrt(this.determinant))/2*a);
-			this.roots.add(((-1)*b - Math.sqrt(this.determinant))/2*a);
+			this.realRoots.add(((-1)*b + Math.sqrt(this.discriminant))/2*a);
+			this.realRoots.add(((-1)*b - Math.sqrt(this.discriminant))/2*a);
 		}
-		else if this.discriminant == 0
+		else if (this.discriminant == 0)
 		{
-			this.roots.add(((-1)*b + Math.sqrt(this.determinant))/2*a);
+			this.realRoots.add(((-1)*b + Math.sqrt(this.discriminant))/2*a);
 		}
+	}
+
+	public static void main(String[] args)
+	{
+		
 	}
 }
