@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 public class Polynomial_v6
 {
 	public ArrayList<String> terms = new ArrayList<String>();
-	public ArrayList<String> coefficients = new ArrayList<String>();
+	public ArrayList<Double> coefficients = new ArrayList<Double>();
 	public ArrayList<Integer> exponents = new ArrayList<Integer>();
 
 	//set at zero until constructor will set it to a value using the getDegree() method
@@ -30,7 +30,7 @@ public class Polynomial_v6
 	{
 		//throw exception that if any function prefixes are contained in the given "polynomial" then Java should state this as such and have the user to try again
 		System.out.println("Enter your polynomial.");
-		System.out.println("Remember to use asterisk symbols for multiplication and forward slashes for division.");
+		System.out.println("Use decimals or approximate decimals for rational values.");
 		System.out.println("Be sure to use parentheses whenever you can to clarify the operation as much as possible.");
 
 		this.expression = keyboard.next();
@@ -102,7 +102,41 @@ public class Polynomial_v6
 	private void extractCoefficients(String variable)
 	{
 		//cycle through each term and separate out each coefficient. This does NOT include non-polynomial functions
-		for (int k = 0; k<=this.terms.size()-1;k++)
+		for (int i = 0; i<=this.terms.size()-1; i++)
+		{
+			if (this.terms.get(i).equals(variable) && this.terms.get(i).length() == 1)
+			{
+				//System.out.println("Condition 1");
+				this.coefficients.add(1.0);
+			}
+			else if (this.terms.get(i).split(variable)[0].equals("") || this.terms.get(i).split(variable)[0].equals("+"))
+			{
+				//System.out.println("Condition 2");
+				this.coefficients.add(1.0);
+			}
+			else if (this.terms.get(i).split(variable)[0].equals("-"))
+			{
+				//System.out.println("Condition 3");
+				this.coefficients.add(-1.0);
+			}
+			else if (!this.terms.get(i).contains(variable) && String.valueOf(this.terms.get(i).charAt(0)).equals("") || this.terms.get(i).contains("+"))
+			{
+				//System.out.println("Condition 4");
+				this.coefficients.add(Double.parseDouble(this.terms.get(i).split(variable)[0]));
+			}
+			else if (!this.terms.get(i).contains(variable) && String.valueOf(this.terms.get(i).charAt(0)).equals("-"))
+			{
+				//System.out.println("Condition 5");
+				this.coefficients.add(Double.parseDouble(this.terms.get(i)));
+			}
+			else
+			{
+				//System.out.println("Condition 6");
+				this.coefficients.add(Double.parseDouble(this.terms.get(i).split(variable)[0]));
+			}
+		}
+
+		/*for (int k = 0; k<=this.terms.size()-1;k++)
 		{
 			String variableInTerm = String.valueOf((this.terms.get(k).charAt(0)));
 			String variableInNextTerm = String.valueOf((this.terms.get(k).charAt(1)));
@@ -110,28 +144,43 @@ public class Polynomial_v6
 			//if the first character is just the variable itself, it's coefficient is assumed to be one
 			if (variableInTerm.equals(variable))
 			{
+				System.out.println("Condition 1");
 				this.coefficients.add("1");
 			}
-			//if the term has just an x, as well as having a plus or minus sign for the first character
-			else if (this.terms.get(k).contains("+") || this.terms.get(k).contains("-") && variableInNextTerm.equals(variable))
+			//if first term has a negative one coefficient, then place a -1 in the coefficients ArrayList
+			else if (this.terms.get(0).contains(variable) && this.terms.get(0).contains("-"))
 			{
-				this.coefficients.add("1");
+				System.out.println("Condition 2");
+				this.coefficients.add("-1");
 			}
-			/*/if the term is a constant term
+			//if the term is a positive linear term, as well as has just a plus in it
+			else if (this.terms.get(k).contains("+") && this.terms.get(k).contains(variable))
+			{
+				System.out.println("Condition 3");
+				System.out.println(this.terms.get(k));
+				if (this.terms.get(k).contains("+x") || this.terms.get(k).contains("+"+"variable\\^"))
+				{
+					this.coefficients.add("1");
+				}
+				//if variable is accompanied by an exponent
+				else if (this.terms.get(k).contains(variable+"\\^"))
+				{
+					this.coefficients.add("this.terms.get(k).split(variable+"//^")[0]");
+				}
+			}
+			//if the term has is a negative linear term, place a -1 string in coefficients
+			else if (this.terms.get(k).contains("-") && this.terms.get(k).contains(variable))
+			{
+				System.out.println("Condition 4");
+				if (this.terms.get(k).split(variable+"//^")[0].equals("-"))
+				this.coefficients.add("-1");
+			}
+			/*if the term is a constant term
 			that is if there is neither a variable nor an exponent (exponents will be asuumed they accompany only variables)
 			as they always do regularly in functions or equations and not actual numbers themselves
 			OR if the supposed polynomial is just a constant
 			*/
-			else if ((!this.terms.get(k).contains(variable)) || (!this.terms.get(k).contains(variable) && this.terms.size() == 1))
-			{
-				this.coefficients.add(this.terms.get(k));
-			}
-			//if the rest of the conditions don't apply, extract the String value and store it into coefficients
-			else if (this.terms.get(k).contains(variable))
-			{
-				this.coefficients.add(this.terms.get(k).split(variable)[0]);
-			}
-		}
+			System.out.println(this.getCoefficients());
 	}
 
 	private void determineDegree()
@@ -146,7 +195,7 @@ public class Polynomial_v6
 		}
 	}
 
-	public ArrayList<String> getCoefficients()
+	public ArrayList<Double> getCoefficients()
 	{
 		return this.coefficients;
 	}
@@ -175,7 +224,7 @@ public class Polynomial_v6
 		double result = 0.0;
 		for (int i = 0; i < this.terms.size(); i++)
 		{
-			double coefficient = Double.parseDouble(this.coefficients.get(i));
+			double coefficient = this.coefficients.get(i);
 			double exponent = (double)(this.exponents.get(i));
 			if (this.terms.size() == 1)
 			{
