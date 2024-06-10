@@ -3,6 +3,8 @@ import java.lang.Math.*;
 
 public class RationalExpression
 {
+	//create a method that reduces numerators and/or denominators when the factors are raised to a power
+
 	//p is the numerator polynomial and q is the denominator polynomial
 	String _variable = "";
 	ArrayList<Polynomial> _num = new ArrayList<Polynomial>();
@@ -18,7 +20,6 @@ public class RationalExpression
 	{
 		for (int i = 0; i < this._num.size(); i++)
 		{
-			
 			System.out.print("(");
 			this._num.get(i).printPolynomial();
 			System.out.print(")");
@@ -82,6 +83,16 @@ public class RationalExpression
 		}
 	}
 
+	public ArrayList<Object> findCriticalValues(RationalExpression r)
+	{
+		r.simplify();
+		ArrayList<Object> values = new ArrayList<>();
+		for (int i = 0; i < r._denom.size(); i++)
+			values.add(r._denom.get(i));
+
+		return values;
+	}
+
 	public RationalExpression multiply(RationalExpression p, RationalExpression q)
 	{
 		ArrayList<Double> cEmpty = new ArrayList<Double>();
@@ -106,10 +117,10 @@ public class RationalExpression
 
 		//double distribute the terms
 		for (int k = 0; k < p._num.size(); k++)
-			newNum = Polynomial.distribute(newNum,p._num.get(k));
+			newNum = Polynomial.doubleDistribute(newNum,p._num.get(k));
 
 		for (int m = 0; m < p._denom.size(); m++)
-			newDenom = Polynomial.distribute(newDenom,p._denom.get(m));
+			newDenom = Polynomial.doubleDistribute(newDenom,p._denom.get(m));
 
 		//then combine like terms to simplify again
 		newNum.simplify();
@@ -198,14 +209,22 @@ public class RationalExpression
 		someFactor.add(q);
 		someFactor.add(s);
 		someFactor.add(s);
+		for (int i = 0; i < someFactor.size(); i++)
+		{
+			System.out.println(someFactor.get(i).printPolynomial());
+		}
 
 		anotherFactor.add(q);
 		anotherFactor.add(t);
 
+		System.out.println(someFactor.get(0).printPolynomial());
+		System.out.println(anotherFactor.get(0).printPolynomial());
 
 		RationalExpression r = new RationalExpression(someFactor,anotherFactor);
+		System.out.println(r._num.get(1).printPolynomial());
 		r.reciprocate();
 		r.simplify();
+		r.displayExpression();
 		r.displayExpression();
 		double x = r.evaluate(1.0);
 		System.out.println(x);
