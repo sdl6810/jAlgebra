@@ -47,4 +47,28 @@ public class generic_math
 
 		return factors;
 	}
+
+	public static boolean thisArrayContainsElement(String[] arr, String x)
+	{
+		boolean insideArray = false;
+		for (int i = 0; i < arr.length; i++)
+		{
+			if (x.equals(arr[i]))
+			{
+				insideArray = true;
+				break;
+			}
+		}
+		return insideArray;
+	}
+
+	public static void main(String[] args)
+	{
+		double number = generic_math.randbetween(1,20);
+		System.out.println(number);
+		String[] someNumbers = {"1.0","2.0","3.0","4.0","10.0","15.0","12.0","9.0","17.0"};
+
+		boolean insideNumbers = generic_math.thisArrayContainsElement(someNumbers,Double.toString(number));
+		System.out.println(insideNumbers);
+	}
 }

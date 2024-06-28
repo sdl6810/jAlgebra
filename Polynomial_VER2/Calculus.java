@@ -14,13 +14,14 @@ public class Calculus
 		ArrayList<Double> df_dxExpons = new ArrayList<Double>();
 		for (int i = 0; i < f._exponents.size(); i++)
 		{
-			df_dxCoeffs.add(f._exponents.get(i)*f._coefficients.get(i));
-			df_dxExpons.add(f._exponents.get(i)-1);	
-			if (f._coefficients.get(i) == 0.0)
+			if (f._coefficients.get(i) == 0.0 && f._exponents.get(i) < 0)
 			{
 				f._coefficients.remove(i);
 				f._exponents.remove(i);
 			}
+			df_dxCoeffs.add(f._exponents.get(i)*f._coefficients.get(i));
+			df_dxExpons.add(f._exponents.get(i)-1);	
+			
 		}
 		Polynomial df_dx = new Polynomial(f._variable,df_dxCoeffs,df_dxExpons);
 
@@ -78,7 +79,7 @@ public class Calculus
 		df_dx_g.add(dg_dx_f);
 
 		//divide by g(x)^2
-		Polynomial denominator = Polynomial.power(g,2);
+		Polynomial denominator = Polynomial.doubleDistribute(g,g);
 
 		ArrayList<Polynomial> n = new ArrayList<Polynomial>();
 		ArrayList<Polynomial> d = new ArrayList<Polynomial>();
@@ -103,14 +104,48 @@ public class Calculus
 
 	public static ArrayList<Polynomial> chainRule(Polynomial inner, Polynomial outer)
 	{
+		Polynomial dy_du = new Polynomial(inner._variable, new ArrayList<Double>(), new ArrayList<Double>());
+		Polynomial du_dx = new Polynomial(inner._variable, new ArrayList<Double>(), new ArrayList<Double>());
 		ArrayList<Polynomial> chain = new ArrayList<Polynomial>();
-		Polynomial dy_du = Calculus.d_dx(inner);
-		System.out.println(dy_du.printPolynomial());
-		Polynomial du_dx = Calculus.d_dx(outer);
-		System.out.println(du_dx.printPolynomial());
+
+		//outer(inner(x))
+		if (inner._coefficients.size() == 0)
+		{
+			if (inner._exponents.size() == 0)
+			{
+				dy_du._coefficients.add(1.0);
+				dy_du._exponents.add(1.0);
+				dy_du.higherPower = 1.0;
+			}
+			else if (inner._exponents.size() > 0)
+			{
+				dy_du._coefficients.add(0.0);
+			}
+
+		}
+		//example: (1x)^n, coefficient == 1
+		else if (inner._coefficients.get(0) >= 1)
+		{
+			//(1x)^0 = 1
+			if ((inner._exponents.get(0) == 0) || (inner._exponents.size() == 0))
+			{
+				dy_du._coefficients.add(0.0);
+				dy_du._coefficients.add(0.0);
+			}
+			//(mx)^1 or (mx)^n where m >=1 and n >= 1
+			else if (inner._exponents.get(0) >= 1)
+			{
+				//n*(1x)^n
+				//d/dn ((1x)^n) = n*(1x)^(n-1)
+				dy_du._coefficients.add(outer._exponents.get(0)*inner._exponents.get(0));
+				dy_du._exponents.add(outer._exponents.get(0) - 1);
+			}
+		}
+
+		du_dx = Calculus.d_dx(outer);
 
 		chain.add(dy_du);
-		chain.add(du_dx);
+		chain.add(inner);
 
 		return chain;
 	}
@@ -132,27 +167,6 @@ public class Calculus
 		return chainResult;
 	}
 
-	public static Polynomial indefiniteIntegral(Polynomial p)
-	{
-		ArrayList<Double> c = new ArrayList<Double>();
-		ArrayList<Double> e = new ArrayList<Double>();
-		Polynomial integrate = new Polynomial(p._variable,c,e);
-
-		for (int i = 0; i < p._exponents.size(); i++)
-		{
-			integrate._coefficients.add(p._coefficients.get(i)/(p._exponents.get(i)+1));
-			integrate._exponents.add(p._exponents.get(i)+1);
-		}
-		return integrate;
-	}
-
-	public static double definiteIntegral(Polynomial p, double upper, double lower)
-	{
-		Polynomial integrated = indefiniteIntegral(p);
-		double difference = integrated.evaluate(upper) - integrated.evaluate(lower);
-		return difference;
-	}
-
 	public static void main(String[] args)
 	{
 		ArrayList<Double> c = new ArrayList<Double>();
@@ -164,26 +178,13 @@ public class Calculus
 		ArrayList<Double> c4 = new ArrayList<Double>();
 		ArrayList<Double> e4 = new ArrayList<Double>();
 
-		c.add(8.0);
-		c.add(3.0);
-		e.add(4.0);
-		e.add(1.0);
+		c.add(1.0);
+		e.add(3.0);
 
-		c2.add(6.0);
-		c2.add(15.0);
-		c2.add(34.0);
-		e2.add(3.0);
-		e2.add(1.0);
+		c2.add(1.0);
+		c2.add(1.0);
+		e2.add(2.0);
 		e2.add(0.0);
-
-		c3.add(3.0);
-		c3.add(8.0);
-		c4.add(2.0);
-		c4.add(-7.0);
-		e3.add(2.0);
-		e3.add(1.0);
-		e4.add(1.0);
-		e4.add(0.0);
 
 		Polynomial p = new Polynomial("x",c,e);
 		Polynomial q = new Polynomial("x",c2,e2);
@@ -193,10 +194,21 @@ public class Calculus
 		Polynomial dp_dx = Calculus.d_dx(p);
 		Polynomial dq_dx = Calculus.d_dx(q);
 
-		ArrayList<Polynomial> dy_dx = Calculus.chainRule(p,t);
+		System.out.println("p = " + p.printPolynomial());
+		System.out.println("q = " + q.printPolynomial());
+		ArrayList<Polynomial> dy_dx = Calculus.chainRule(q,p);
+
 		Polynomial dy_du_dx = Calculus.chainRuleDistribute(dy_dx);
-		System.out.println(dy_dx.get(0).printPolynomial());
-		System.out.println(dy_dx.get(1).printPolynomial());
-		System.out.println(dy_du_dx.printPolynomial());
+		for (int i = 0; i < dy_dx.size(); i++)
+		{
+			if (i == 3)
+				System.out.println("");
+			else
+			{
+				System.out.print("(");
+				System.out.print(dy_dx.get(i).printPolynomial());
+				System.out.print(")");
+			}
+		}
 	}
 }

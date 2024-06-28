@@ -21,7 +21,7 @@ public class RationalExpression
 		for (int i = 0; i < this._num.size(); i++)
 		{
 			System.out.print("(");
-			this._num.get(i).printPolynomial();
+			System.out.print(this._num.get(i).printPolynomial());
 			System.out.print(")");
 		}
 		System.out.println("\n");
@@ -30,7 +30,7 @@ public class RationalExpression
 		for (int j = 0; j < this._denom.size(); j++)
 		{
 			System.out.print("(");
-			this._denom.get(j).printPolynomial();
+			System.out.print(this._denom.get(j).printPolynomial());
 			System.out.print(")");
 		}
 		System.out.println("\n");
@@ -68,7 +68,7 @@ public class RationalExpression
 			//cycle through denominator
 			for (int k = 0; k < this._denom.size(); k++)
 			{
-			//check if polynomials are equal
+				//check if polynomials are equal
 				if ((this._num.get(i).isEqualTo(this._denom.get(k))))
 				{
 					//if they are equal, remove them from top and bottom
@@ -156,6 +156,196 @@ public class RationalExpression
 		return p;
 	}
 
+	private boolean productsAreEqualTo(ArrayList<Polynomial> factors)
+	{
+		int numberOfEqualTerms = 0;
+		boolean productsEqual = false;
+		//if there are less factors than in _denom
+		if (this._denom.size() != factors.size())
+		{
+			if (this._denom.size() > factors.size())
+				productsEqual = false;
+			else if (this._denom.size() < factors.size())
+				productsEqual = false;
+		}
+		//if the number of factors are equal, check if each factor is the same
+		else if (this._denom.size() == factors.size())
+		{
+			for (int i = 0; i < this._denom.size(); i++)
+			{
+				for (int j = 0; j < factors.size(); j++)
+				{
+					if (this._denom.get(i).isEqualTo(factors.get(j)))
+						numberOfEqualTerms++;
+				}
+			}
+			if (numberOfEqualTerms == this._denom.size())
+				productsEqual = true;
+		}
+		
+		return productsEqual;
+	}
+
+	//tests if a polynomial is in a list of factors
+	public static boolean isInFactorList(double constant, double exponent, ArrayList<Polynomial> array)
+	{
+		boolean isInList = false;
+		for (int i = 0; i < array.size(); i++)
+		{
+			for (int j = 0; j < array.get(i)._exponents.size(); j++)
+			{
+				if ((constant == array.get(i)._coefficients.get(j)) && (exponent == array.get(i)._exponents.get(j)))
+					isInList = true;
+			}
+		}
+		return isInList;
+	}
+
+	public static ArrayList<Polynomial> generateLCM(ArrayList<Polynomial> factorList1, ArrayList<Polynomial> factorList2) 
+	{
+	    ArrayList<Polynomial> lcm = new ArrayList<>();
+
+	    // Add all polynomials from factorList1
+	    for (Polynomial poly : factorList1)
+	    {
+	        if (!isInFactorList(poly, factorList2)) 
+	            lcm.add(poly);
+	    }
+
+	    // Add all polynomials from factorList2 that are not already in lcm
+	    for (Polynomial poly : factorList2)
+	    {
+	        if (!isInFactorList(poly, lcm))
+	            lcm.add(poly);
+	    }
+
+	    return lcm;
+	}
+
+	private static boolean isInFactorList(Polynomial poly, ArrayList<Polynomial> list)
+	{
+	    for (Polynomial p : list) 
+	    {
+	        if (p.isEqualTo(poly)) 
+	            return true;
+	    }
+	    return false;
+	}
+
+	public void negateRE()
+	{
+		//will multiply the first term of the numerator by one
+		//this negation will distribute to the rest of the terms in the numerator and affect the overall value of the rational expression
+		this._num.get(0).negate();
+	}
+
+	public static RationalExpression add(RationalExpression left, RationalExpression right)
+	{
+		int sameFactors = 0;
+		ArrayList<Double> c = new ArrayList<Double>();
+		ArrayList<Double> e = new ArrayList<Double>();
+		ArrayList<Polynomial> lcm = RationalExpression.generateLCM(left._denom,right._denom);
+		Polynomial finalNumerator = new Polynomial(left._num.get(0)._variable,c,e);
+		ArrayList<Polynomial> n = new ArrayList<Polynomial>();
+		RationalExpression result = new RationalExpression(n, lcm);
+
+		boolean denominatorsAreEqual = left.productsAreEqualTo(right._denom);
+		Polynomial lhsProduct = new Polynomial(left._num.get(0)._variable,c,e);
+		Polynomial rhsProduct = new Polynomial(left._num.get(0)._variable,c,e);
+
+		if (denominatorsAreEqual)
+		{
+			//if there is only one factor in the left hand side
+			if (left._num.size() == 1)
+				lhsProduct = left._num.get(0);
+			else
+			{
+				lhsProduct = Polynomial.doubleDistribute(left._num.get(0),left._num.get(1));
+				//if there are more than two factors
+				if (left._num.size() > 2)
+				{
+					for (int k = 2; k < left._num.size(); k++)
+						lhsProduct = Polynomial.doubleDistribute(lhsProduct,left._num.get(k));
+				}
+			}
+
+			//if there is only one factor in the right hand side
+			if (right._num.size() == 1)
+				rhsProduct = right._num.get(0);
+			else
+			{
+				rhsProduct = Polynomial.doubleDistribute(right._num.get(0),right._num.get(1));
+				//if there are more than two factors in the right hand side
+				if (right._num.size() > 2)
+				{
+					for (int m = 2; m < right._num.size(); m++)
+						rhsProduct = Polynomial.doubleDistribute(rhsProduct,right._num.get(m));
+				}
+				lhsProduct.sortInDescendingOrder();
+				lhsProduct.simplify();
+				rhsProduct.sortInDescendingOrder();
+				rhsProduct.simplify();
+			}
+
+			lhsProduct.add(rhsProduct);
+			lhsProduct.sortInDescendingOrder();
+			lhsProduct.simplify();
+			result._num.clear();
+			result._num.add(lhsProduct);
+		}
+		else if (!denominatorsAreEqual)
+		{
+			//"multiply" each of the LCM factors to the numerators **DO NOT DOUBLE DISTRIBUTE YET**
+			for (int i = 0; i < lcm.size(); i++)
+			{
+				left._num.add(lcm.get(i));
+				right._num.add(lcm.get(i));
+			}
+
+			//simplify both expressions by removing multiples of one
+			left.simplify();
+			right.simplify();
+
+			//what should happen if it is only one factor instead of two?
+			Polynomial leftNumerator = Polynomial.doubleDistribute(left._num.get(0),left._num.get(1));
+			Polynomial rightNumerator = Polynomial.doubleDistribute(right._num.get(0),right._num.get(1));
+
+			if (left._denom.size() > 2)
+			{
+				for (int j = 2; j < left._denom.size(); j++)
+					leftNumerator = Polynomial.doubleDistribute(leftNumerator,left._num.get(j));
+			}
+
+			if (right._denom.size() > 2)
+			{
+				for (int k = 2; k < right._denom.size(); k++)
+					rightNumerator = Polynomial.doubleDistribute(rightNumerator,right._num.get(k));
+			}
+			leftNumerator.sortInDescendingOrder();
+			leftNumerator.simplify();
+			rightNumerator.sortInDescendingOrder();
+			rightNumerator.simplify();
+			leftNumerator.add(rightNumerator);
+			leftNumerator.sortInDescendingOrder();
+			leftNumerator.simplify();
+		}
+
+		return result;
+	}
+
+	public static RationalExpression subtract(RationalExpression left, RationalExpression right)
+	{
+		right.negateRE();
+		return RationalExpression.add(left,right);
+	}
+
+	public static ArrayList<Polynomial> determinePartialFractions(ArrayList<RationalExpression> expressions)
+	{
+		ArrayList<Polynomial> algebraicCoefficients = new ArrayList<Polynomial>();
+
+		return algebraicCoefficients;
+	}
+
 	public static void main(String[] args)
 	{
 		String variable = "x";
@@ -209,10 +399,6 @@ public class RationalExpression
 		someFactor.add(q);
 		someFactor.add(s);
 		someFactor.add(s);
-		for (int i = 0; i < someFactor.size(); i++)
-		{
-			System.out.println(someFactor.get(i).printPolynomial());
-		}
 
 		anotherFactor.add(q);
 		anotherFactor.add(t);
@@ -221,12 +407,6 @@ public class RationalExpression
 		System.out.println(anotherFactor.get(0).printPolynomial());
 
 		RationalExpression r = new RationalExpression(someFactor,anotherFactor);
-		System.out.println(r._num.get(1).printPolynomial());
-		r.reciprocate();
-		r.simplify();
 		r.displayExpression();
-		r.displayExpression();
-		double x = r.evaluate(1.0);
-		System.out.println(x);
 	}
 }

@@ -14,9 +14,10 @@ public class Polynomial
 	double higherPower = 1.0;
 	boolean isNestedPolynomial = false;
 
-	ArrayList<Double> innerElements = new ArrayList<Double>();
+	ArrayList<Double> innerCoefficients = new ArrayList<Double>();
 	ArrayList<Double> innerExponents = new ArrayList<Double>();
 	String innerVariable = _variable;
+	double outerCoefficient = 1.0;
 
 	public Polynomial(String variable, ArrayList<Double> coefficients, ArrayList<Double> exponents)
 	{
@@ -103,7 +104,7 @@ public class Polynomial
 		}
 		else if (exponent == 1)
 		{
-			term = Double.toString(coefficient)+_variable;
+			term = Double.toString(coefficient)+this._variable;
 		}
 		else
 		{
@@ -294,7 +295,7 @@ public class Polynomial
 		Polynomial x = new Polynomial(q._variable,c,e);
 		for (int j = 0; j < q._coefficients.size(); j++)
 		{
-			w = p.distribute(q._coefficients.get(j),q._exponents.get(j),u);
+			w = q.distribute(q._coefficients.get(j),q._exponents.get(j),u);
 			w.simplify();
 			x.add(w);
 		}
@@ -332,10 +333,11 @@ public class Polynomial
 			return false;
 	}
 
-	public ArrayList<Object> solveQuadratic(Polynomial p)
+	public ArrayList<Object> solveQuadratic(Polynomial p,double rhs)
 	{
 		p.sortInDescendingOrder();
 		p.simplify(); //to take care of any like terms that appear in the quadratic
+		int lastCoefficient = p._coefficients.size()-1;
 		ArrayList<Object> roots = new ArrayList<>();
 		if ((p._coefficients.size() == 1))
 		{
@@ -350,6 +352,11 @@ public class Polynomial
 			/*0 = ax^2 + b
 			  (-b/a) = p/m Math.sqrt(x^2)
 			  p/m sqrt((-b/a)) = x*/
+			if (rhs >= 0)
+				p._coefficients.set(lastCoefficient,p._coefficients.get(lastCoefficient) - rhs);
+			else if (rhs < 0)
+				p._coefficients.set(lastCoefficient,p._coefficients.get(lastCoefficient) + rhs);
+
 			if (p._exponents.get(1) == 0)
 			{
 				if (binomialRoot < 0)
@@ -371,7 +378,12 @@ public class Polynomial
 		}
 		/*0 = ax^2 + bx + c*/
 		if (p._coefficients.size() >= 3)
-		{//check if there are enough coefficients
+		{
+			if (rhs >= 0)
+				p._coefficients.set(lastCoefficient, p._coefficients.get(lastCoefficient) - rhs);
+			else if (rhs < 0)
+				p._coefficients.set(lastCoefficient, p._coefficients.get(lastCoefficient) + rhs);
+
 			p.simplify();
 			double discriminant = Math.pow(p._coefficients.get(1),2) - 4*p._coefficients.get(0)*p._coefficients.get(2);
 			if (discriminant < 0)
@@ -440,7 +452,6 @@ public class Polynomial
 			lastTermFactors.add(-1*lastTermFactors.get(m));
 			m++;
 		}
-
 		//generate complete list of all possible factors
 		for (int i = 0; i < lastSize; i++)
 			for (int j = 0; j < firstSize; j++)
@@ -452,9 +463,9 @@ public class Polynomial
 			if (this.syntheticDivide(possibleZeroes.get(k)) == true)
 				actualZeroes.add(possibleZeroes.get(k));
 		}
-		System.out.println("Possible zeroes: " + possibleZeroes);
-		System.out.println("Last term factors " + lastTermFactors);
-		System.out.println("Leading coefficient " + leadingCoeffFactors);
+		System.out.println(lastTermFactors);
+		System.out.println(leadingCoeffFactors);
+		System.out.println(possibleZeroes);
 		return actualZeroes;
 	}
 
@@ -508,7 +519,6 @@ public class Polynomial
 	            newPolynomial.add(c.get(0));
 	        else
 	            newPolynomial.add(c.get(i) + zero * newPolynomial.get(i - 1));
-	        System.out.println(newPolynomial);
 	    }
 
 	    int lastTerm = newPolynomial.size() - 1;
@@ -553,11 +563,11 @@ public class Polynomial
 
 				}
 				rightHandSide = rightHandSide/c.get(0);
-				factors.add(rightHandSide);			
+				factors.add(rightHandSide);
 			}
 			else if (degree == 2)
 			{
-				factors = p.solveQuadratic(p);
+				factors = p.solveQuadratic(p,value);
 				System.out.println(factors);
 				if ((factors.get(0) instanceof ComplexNumber))
 				{
@@ -603,41 +613,50 @@ public class Polynomial
 			return false;
 	}
 
-	public static Polynomial generateRandomPolynomial(String variable, int terms, int max_coeff, int max_exp)
+	public static Polynomial generatePolynomialWithRoots(ArrayList<Polynomial> factors)
 	{
 		ArrayList<Double> c = new ArrayList<Double>();
 		ArrayList<Double> e = new ArrayList<Double>();
-		int i = 0;
-		while (i <= terms)
-		{
-			c.add((double)generic_math.randbetween(0,max_coeff));
-			e.add((double)generic_math.randbetween(0,max_exp));
-			i++;
-		}
-		Polynomial random = new Polynomial(variable,c,e);
-		random.simplify();
-		random.sortInDescendingOrder();
-		return random;
-	}
+		String var = factors.get(0)._variable;
+		Polynomial p = new Polynomial(var,c,e);
+		int lastTerm = factors.size()-1;
 
-	private int locateSpecificTerm(double coeff, double exponent)
-	{
-		ArrayList<Double> e = this.getExponents();
-		int index;
-		for (index = 0; index < this._exponents.size(); index++)
+		p = Polynomial.doubleDistribute(factors.get(0),factors.get(1));
+		for (int i = 1; i < factors.size()-1; i++)
 		{
-			if (e.get(index) == coeff && e.get(index) == exponent)
-				break;
+			p = doubleDistribute(p,factors.get(i+1));
+			System.out.println(p.printPolynomial());
 		}
-		return index;
-	}
-
-	/*ArrayList<Object> c will have mostly double elements except for a Polynomial in between them
-	this Polynomial will be the nested Polynomial inside the larger one.  It will be assumed that
-	nothing has been distributed or simplified to this nested polynomial.*/
-	public void uSubstitution(ArrayList<Double> coeffIdentifier, ArrayList<Double> exponentIdentifier)
-	{
 		
+		return p;
+	}
+
+	public ArrayList<Object> uSubSolve(Polynomial outer, Polynomial inner)
+	{
+		String dummy = "u";
+
+		inner._variable = dummy;
+		ArrayList<Object> solutionOrSolutionsForU = this.findZeroes(outer,0.0);
+		
+		//solve polynomial for u
+		ArrayList<Object> solutionOrSolutionsForX = new ArrayList<Object>();
+
+		for (int i = 0; i < solutionOrSolutionsForU.size(); i++)
+		{
+			if (solutionOrSolutionsForU.get(i) instanceof Double)
+			{
+				solutionOrSolutionsForX = this.findZeroes(inner,(Double)solutionOrSolutionsForU.get(i));
+			}
+			else if (solutionOrSolutionsForU.get(i) instanceof ComplexNumber)
+			{
+				ComplexNumber complexSolution = (ComplexNumber)solutionOrSolutionsForU.get(i);
+				if (complexSolution.real >= 0)
+					solutionOrSolutionsForX = this.findZeroes(inner,(-1)*complexSolution.real);
+				else if (complexSolution.real < 0)
+					solutionOrSolutionsForX = this.findZeroes(inner,complexSolution.real);
+			}
+		}
+		return solutionOrSolutionsForX;
 	}
 
 	public static void main(String[] args)
@@ -652,30 +671,67 @@ public class Polynomial
 		ArrayList<Double> c4 = new ArrayList<Double>();
 		ArrayList<Double> e4 = new ArrayList<Double>();
 
-		c.add(8.0);
-		c.add(3.0);
-		e.add(4.0);
+		c.add(2.0);
+		c.add(1.0);
 		e.add(1.0);
+		e.add(0.0);
 
-		c2.add(6.0);
-		c2.add(15.0);
-		c2.add(34.0);
-		e2.add(3.0);
+		c2.add(1.0);
+		c2.add(-7.0);
 		e2.add(1.0);
 		e2.add(0.0);
 
-		c3.add(3.0);
-		c3.add(8.0);
-		c4.add(2.0);
-		c4.add(-7.0);
-		e3.add(2.0);
+		c3.add(1.0);
+		c3.add(12.0);
 		e3.add(1.0);
+		e3.add(0.0);
+
+		c4.add(3.0);
+		c4.add(-1.0);
 		e4.add(1.0);
 		e4.add(0.0);
 
-		Polynomial p = new Polynomial("x",c,e);
-		Polynomial q = new Polynomial("x",c2,e2);
-		Polynomial s = new Polynomial("x",c3,e3);
+		Polynomial p = new Polynomial("t",c,e);
+		Polynomial q = new Polynomial("t",c2,e2);
+		Polynomial s = new Polynomial("t",c3,e3);
 		Polynomial t = new Polynomial("x",c4,e4);
+
+		ArrayList<Polynomial> roots = new ArrayList<Polynomial>();
+		roots.add(p);
+		roots.add(q);
+		roots.add(s);
+		roots.add(t);
+
+		for (int i = 0; i < roots.size(); i++)
+			System.out.println(roots.get(i).printPolynomial());
+
+		Polynomial y = Polynomial.doubleDistribute(roots.get(0),roots.get(1));
+		y = Polynomial.doubleDistribute(y,roots.get(2));
+		System.out.println(y.printPolynomial());
+
+		Polynomial z = Polynomial.generatePolynomialWithRoots(roots);
+
+		ArrayList<Double> outerC = new ArrayList<Double>();
+		ArrayList<Double> outerE = new ArrayList<Double>();
+		ArrayList<Double> innerC = new ArrayList<Double>();
+		ArrayList<Double> innerE = new ArrayList<Double>();
+		outerC.add(1.0);
+		outerC.add(7.0);
+		outerC.add(10.0);
+		outerE.add(2.0);
+		outerE.add(1.0);
+		outerE.add(0.0);
+		innerC.add(1.0);
+		innerC.add(2.0);
+		innerC.add(1.0);
+		innerE.add(2.0);
+		innerE.add(1.0);
+		innerE.add(0.0);
+
+		Polynomial in = new Polynomial("x",innerC,innerE);
+		Polynomial out = new Polynomial("("+in.printPolynomial()+")",outerC,outerE);
+		System.out.println(out.printPolynomial());
+
+		ArrayList<Object> solutions = in.uSubSolve(out,in);
 	}
 }

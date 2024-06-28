@@ -11,42 +11,69 @@ public class Radical
 	private double _coefficient;
 	private Polynomial _p;
 
-	public Radical(Object expression, int n, int d, double coefficient)
+	int _radicand;
+	int _root;
+
+	public Radical(Object expression, int root, int radicand, double coefficient)
 	{
-		_p = (Polynomial)expression;
-		_numerator = n;
-		_denominator = d;
-		activeRoot = true;
-		_coefficient = coefficient;
-		Fraction f = new Fraction(_numerator,_denominator); 
+		this._p = (Polynomial)expression;
+		this._radicand = radicand;
+		this._root = root;
+		this.activeRoot = true;
+		this._coefficient = coefficient;
+		Fraction f = new Fraction(radicand,root); 
 	}
 
-	private String identify(Object obj)
+	private static ArrayList<Double> findSquaresUpTo(double value)
 	{
-		String type = "";
+		ArrayList<Double> squares = new ArrayList<Double>();
+		squares.add(1.0);
+		for (int i = 2; i <= (int)(value/2); i++)
+			squares.add((double)(i*i));
+
+		return squares;
+	}
+
+	public static ArrayList<Double> reduceToLowestSquare(double value)
+	{
+		ArrayList<Double> factors = new ArrayList<Double>();
+		ArrayList<Double> squares = findSquaresUpTo(value);
+		for (int j = 0; j < squares.size(); j++)
+		{
+			double nextSquare = squares.get(j)*squares.get(j);
+			if (value%nextSquare == 0)
+				factors.add(nextSquare);
+		}
+		System.out.println(factors);
+		return squares;
+	}
+
+	private int identify(Object obj)
+	{
+		int type = 0;
 		if (obj instanceof Polynomial)
-			type = "Polynomial";
+			type = 0;
 		else if (obj instanceof RationalExpression)
-			type = "Rational";
+			type = 1;
 
 		return type;
 	}
 
 	public void displayRadical(Object obj, Fraction r)
 	{
-		String direction = this.identify(obj);
+		int direction = this.identify(obj);
 		String fractionRoot = r.displayFraction();
-		if (direction.equals("Polynomial"))
+		if (direction == 0)
 		{
 			System.out.print(fractionRoot + "-rt(");
 			Polynomial p = (Polynomial)obj;
 			p.printPolynomial();
 			System.out.println(")");
 		}
-		else if (direction.equals("Rational"))
+		else if (direction == 1)
 		{
 			RationalExpression expression = (RationalExpression)obj;
-			System.out.print("sqrt(");
+			System.out.print(fractionRoot + "-rt(");
 			expression.displayExpression();
 			System.out.println(")");			
 		}
@@ -82,7 +109,7 @@ public class Radical
 	{
 		double nthRoot = root.toDecimal(root);
 		this._p.power(this._p,root._num);
-		this._p.distribute(this._p,this._p);
+		this._p.doubleDistribute(this._p,this._p);
 		for (int i = 0; i < this._p._exponents.size(); i++)
 		{
 			//if the exponent of each term is divisible by the root, then divide i-th exponent by that root
@@ -100,7 +127,6 @@ public class Radical
 
 	public static void main(String[] args)
 	{
-		Polynomial p = Polynomial.generateRandomPolynomial("x",7,5,4);
-		p.printPolynomial();
+		ArrayList<Double> possibleSquares = Radical.reduceToLowestSquare(500.0);
 	}
 }
